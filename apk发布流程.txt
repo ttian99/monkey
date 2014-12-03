@@ -1,0 +1,8 @@
+1.设置好 ANDROID_SDK_ROOT,ANT_ROOT,ANDROID_NDK_ROOT等环境变量，装好Cygwin.
+2.双击运行./star/tools/jscompile_res_to_android.bat.
+3.打开Cygwin,进入proj.android目录，执行./build_native.sh.
+4.打开local.properties文件 更改sdk.dir=G:\\android-tools\\sdk  为自己的SDK路径
+5.双击./proj.android/build_relase_apk.bat，输入版本号,即可在./proj.android/apk 目录下生成apk.
+
+
+--------------环境设置-----------------------

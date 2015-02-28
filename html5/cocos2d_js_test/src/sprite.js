@@ -25,117 +25,72 @@ var spriteCreateLayer = cc.Layer.extend({
         //    
 
         /**
-         * 第一类 文字类菜单
-         */
-
-        /**
-         * (1)cc.MenuItemLabel
+         * 第一种：cc.Sprite.create(fileName)
          *
-         * 参数1： 显示的文本label
-         * 参数2： 触发的函数
-         * 参数3： 触发的目标对象， 一般在此场景中就用this
-         * 注意： 需要设置label的样式， 需要一个.fnt自定义字体表
+         * 通过一张图片生成精灵对象
+         * 参数：图片的名称。
          */
-        var m_label1 = cc.LabelBMFont.create("FIRST", res.hahaFnt_fnt);
-        var m_item1 = cc.MenuItemLabel.create(m_label1, this.onMenuCallback, this);
-        m_item1.setPosition(0, 200); //setPosition
+        // var sprite1 = cc.Sprite.create("res/test_sprite.png"); //这里图片名称最好写在resource.js里面
+        // sprite1.setPosition(size.width / 5, size.height / 2);
+        // this.addChild(sprite1);
+
+        /**
+         * 第二种：cc.Sprite.create(fileName, rect)
+         * 通过一张图片进行给定矩形裁剪生成精灵对象
+         * 参数1：图片名称
+         * 参数2：矩形的区域CCRect(x, y, width, height)
+         */
+        var sprite2 = cc.Sprite.create("res/test_sprite.png", cc.rect(0, 0, 150, 80));
+        sprite2.setPosition(size.width / 5 * 2, size.height / 2);
+        this.addChild(sprite2);
+
+        /**
+         * 第三种： cc.Sprite.createWithSpriteFrame(spriteFrame)
+         * 通过缓存中的帧生成精灵对象
+         * 参数： 帧的名称
+         */
+        // var spriteFrameCache = cc.SpriteFrameCache.getInstance(); //使用精灵帧缓存，方便后面多次使用
+        // var frameCache = spriteFrameCache.addSpriteFrames(res.s_plist, res.s_plist_png); //第一个参数plist文件，第二个参数plist对应的png图片
+
+        // var sprite3 = cc.Sprite.createWithSpriteFrame(spriteFrameCache.getSpriteFrame("actor_fish_hetun02_normal_002.png.png")); //plist里面对于的图片名称
+        // sprite1.setPosition(size.width / 5 * 3, size.height / 2);
+        // this.addChild(sprite3);
+        cc.spriteFrameCache.addSpriteFrames(res.s_plist);
+        var sprite3 = cc.Sprite.createWithSpriteFrame(spriteFrameCache.getSpriteFrame("actor_fish_hetun02_normal_002.png.png")); //plist里面对于的图片名称
+        sprite1.setPosition(size.width / 5 * 3, size.height / 2);
+        this.addChild(sprite3);
 
 
         /**
-         * (2)cc.cc.MenuItemFont
-         *
-         * 参数1： 显示的文本label
-         * 参数2： 触发的函数
-         * 参数3： 触发的目标对象， 一般在此场景中就用this
-         * 注意： 需要设置label的样式， 需要一个.fnt自定义字体表
+         *  第四种： cc.Sprite.createWithSpriteFrameName(spriteFrameName)
+         *  另外一种通过缓存中的帧生成精灵对象
+         *  参数： 帧的名称
          */
-        cc.MenuItemFont.setFontName("Arial");
-        var m_item2 = cc.MenuItemFont.create("Test2", this.onMenuCallback, this);
-        m_item2.setPosition(0, 100);
-
+        var sprite4 = cc.Sprite.createWithSpriteFrameName("test1.png");
+        sprite4.setPosition(cc.p(10, 10));
+        this.addChild(sprite4);
 
 
         /**
-         * 第二类： 图片类菜单
+         *  第五种： cc.Sprite.createWithTexture(texture, rect)
+         *  通过Texture2D， 并进行裁剪生成精灵对象
+         *  参数1： Texture图片
+         *  参数2： 矩形的区域
          */
 
-        /**
-         * (3)cc.MenuItemSprite
-         *
-         * 参数1： 正常显示的图片(新建的图片后面带了一个cc.rect是设置图片区域大小， 也就是按钮的区域CCRect(x, y, width, height))
-         * 参数2： 选中显示的图片
-         * 参数3： 不可用显示的图片
-         * 参数4： 触发的函数
-         * 参数5： 触发的目标对象
-         */
-        var spriteNormal = cc.Sprite.create(res.s_menuItem_normal);
-        var spriteSelected = cc.Sprite.create(res.s_menuItem_selected);
-        var spriteDisabled = cc.Sprite.create(res.s_menuItem_disabled);
-        var m_item3 = cc.MenuItemSprite.create(spriteNormal, spriteSelected, spriteDisabled, this.onMenuCallback, this);
-        m_item3.setPosition(0, 0);
 
+        // var batch = cc.SpriteBatchNode.create(s_mybach);
+        // this.addChild(batch);
 
-        /**
-         * (4)cc.MenuItemImage===========================推荐使用
-         *
-         * 参数1： 正常显示的图片
-         * 参数2： 选中显示的图片
-         * 参数3： 触发的函数
-         * 参数4： 触发的目标对象
-         * 注意： 正常和选中的图片都最好事先在resource.js文件中标注好， 让系统首先预加载
-         */
-
-        var m_item4 = cc.MenuItemImage.create(res.s_menuItem_normal, res.s_menuItem_selected, this.onMenuCallback, this);
-        m_item4.setPosition(0, -100);
-
-
-
-        /**
-         * 第三类： 开关类菜单
-         */
-
-        /**
-         * (5)cc.MenuItemToggle
-         *
-         * 参数1： 正常显示的图片
-         * 参数2： 选中显示的图片
-         * 参数3： 触发的函数
-         * 参数4： 触发的目标对象
-         * 注意： 正常和选中的图片都最好事先在resource.js文件中标注好， 让系统首先预加载
-         */
-
-        // 用文本建立两个不同状态的按钮，每当点击时，就会更改字体的状态。
-        var m_item5_1 = cc.MenuItemToggle.create(cc.MenuItemFont.create("On"), cc.MenuItemFont.create("Off"));
-        m_item5_1.setPosition(0, -200);
-        m_item5_1.setCallback(this.onMenuCallback2, this);
-
-
-        // 也可以这样建立多个，每点击一次就逐个更改
-        var m_item5_2 = cc.MenuItemToggle.create(
-            cc.MenuItemFont.create("Off"),
-            cc.MenuItemFont.create("33%"),
-            cc.MenuItemFont.create("66%"),
-            cc.MenuItemFont.create("100%"),
-            this.onMenuCallback2, this
-        );
-        m_item5_2.setPosition(100, -200);
-
-        // 当建立完菜单选项之后我们还需要建立一个菜单“ 大管家”， 把这些选项显示出来
-        menu = cc.Menu.create(m_item1, m_item2, m_item3, m_item4, m_item5_1, m_item5_2);
-        menu.setPosition(cc.p(size.width / 2, size.height / 2));
-        this.addChild(menu);
-    },
-    onMenuCallback: function() {
-        cc.log("you touch the menu=============================!");
-        this.removeChild(menu);
-    },
-    onMenuCallback2: function() {
-        cc.log("you touch the menu5=============================!");
+        // var sprite5 = cc.Sprite.createWithTexture(batch.getTexture(), cc.rect(0, 121, 85, 121)); //需要显示的区域
+        // var sprite6 = cc.Sprite.createWithTexture(batch.getTexture(), cc.rect(85, 121, 85, 121));
+        // sprite5.setPosition(cc.p(10, 10));
+        // this.addChild(sprite5);
 
     }
 });
 
-var spriteCreateScene = cc.Scene.extend({
+var SpriteCreateScene = cc.Scene.extend({
     onEnter: function() {
         this._super();
         var layer = new spriteCreateLayer();

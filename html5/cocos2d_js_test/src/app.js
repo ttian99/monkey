@@ -28,10 +28,10 @@ var helloworldLayer = cc.Layer.extend({
         // cc.director.runScene(new LabelTextScene());
 
         // 2.MenuItem
-        cc.director.runScene(new MenuItemScene());
-
-        // 3.MenuItem
         // cc.director.runScene(new MenuItemScene());
+
+        // 3.SpriteCreate
+        cc.director.runScene(new SpriteCreateScene());
 
     },
 

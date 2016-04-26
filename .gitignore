@@ -43,3 +43,5 @@ Network Trash Folder
 Temporary Items
 .apdisk
 android-xml-parse/node_modules/
+test/prompt/node_modules/.bin/mkdirp
+test/prompt/node_modules/

@@ -46,3 +46,4 @@ android-xml-parse/node_modules/
 test/prompt/node_modules/.bin/mkdirp
 test/prompt/node_modules/
 api/xlsxtojson/node_modules/
+node_modules

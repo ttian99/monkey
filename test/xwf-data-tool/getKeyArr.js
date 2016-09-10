@@ -12,7 +12,7 @@ var extName = '.json';
 var sheetName = 'futian';
 
 
-var sheetArr = ['福田'];
+var sheetArr = ['福田', '南山', '罗湖'];
 
 
 // // 遍历表格名字数组
@@ -34,123 +34,80 @@ function getXslxData(res, dst, sheetName, cb) {
 	});
 }
 
-function getKeyArr() {
-	_.map(sheetArr, function(item, id) {
-		var dst = dstDir + item + extName;
-		getXslxData(resource, dst, item);
-	});
-}
 
+function getData() {
+	_.map(sheetArr, school2Village);
+}
 
 // 小区对应学校
-function school2Village() {
-	// mapSheetArr(getData(item, id));
-	_.map(sheetArr, getData);
-
-
-	// mapSheetArr(function(item, id) {
-	// 	var dst = dstDir + item + '-学校对应小区' + extName;
-	// getXslxData(resource, dst, item, function(err, data) {
-	// 	if (err) {
-	// 		console.log('getXslxData error');
-	// 		return;
-	// 	}
-
-	// 	var arr = [];
-	// 	_.map(data, function(some, idx) {
-	// 		// console.log('-- some ==');
-	// 		console.log('============= idx = ' + idx);
-	// 		var key = some['招生学校'];
-	// 		var range = some['招生范围']
-	// 		var obj = {};
-	// 		obj[key] = range;
-
-	// 		console.log('======= obj = ' + JSON.stringify(obj));
-	// 		// obj.name = some['招生学校'];
-	// 		// obj. = some['招生范围'];
-	// 		arr.push[obj];
-
-	// 		var len = data.length;
-	// 	});
-
-	// 	var jsonStr = JSON.stringify(arr);
-	// 	fsw(dst, jsonStr);
-	// });
-	// });
-}
-
-function getData(item, id) {
-	var dst = dstDir + item + '-学校对应小区' + extName;
-
+function school2Village(item, id) {
+	console.log('-- read sheet: ' + item);
+	var s2vJson = dstDir + item + '-学校对应小区' + extName;
+	var schoolJson = dstDir + item + '-学校' + extName;
+	var villageJson = dstDir + item + '-小区' + extName;
 	async.waterfall([
 		function(callback) {
-			getXslxData(resource, dst, item, function(err, data) {
-					callback(null, data);
-				})
-				// getXslxData(resource, dst, item, function(err, data) {
-				// 	if (err) {
-				// 		console.log('getXslxData error');
-				// 		return;
-				// 	}
-
-			// 	var arr = [];
-			// 	_.map(data, function(some, idx) {
-			// 		// console.log('-- some ==');
-			// 		console.log('============= idx = ' + idx);
-			// 		var key = some['招生学校'];
-			// 		var range = some['招生范围']
-			// 		var obj = {};
-			// 		obj[key] = range;
-
-			// 		console.log('======= obj = ' + JSON.stringify(obj));
-			// 		// obj.name = some['招生学校'];
-			// 		// obj. = some['招生范围'];
-			// 		arr.push[obj];
-
-			// 		var len = data.length;
-			// 	});
-
-			// 	var jsonStr = JSON.stringify(arr);
-			// 	fsw(dst, jsonStr);
-			// });
+			getXslxData(resource, s2vJson, item, function(err, data) {
+				callback(null, data);
+			})
 		},
 		function(arg1, callback) {
-			var arr = [];
+			var s2vArr = []; // 学校对应小区数组
+			var schoolArr = []; // 学校数组
+			var villageArr = []; // 城市数组
+
+			// 格式化数组
+			arg1 = formatArr(item, arg1);
+
 			_.map(arg1, function(some, idx) {
 				var key = some['招生学校'];
 				var range = some['招生范围'];
+				var rangeArr = range.split('，');
+				// console.log("== rangeArr = " + JSON.stringify(rangeArr));
 				var obj = {};
-				obj[key] = range;
-				arr.push(obj);
+				obj[key] = rangeArr;
+				s2vArr.push(obj);
+				schoolArr.push(some['招生学校']);
+				villageArr = villageArr.concat(rangeArr);
 
 				var len = arg1.length;
 				if (idx === len - 1) {
-					console.log(JSON.stringify(arr));
-					callback(null, arr);
+					// 过滤掉数组的假值
+					_.compact(s2vArr);
+					_.compact(schoolArr);
+					_.compact(villageArr);
+					callback(null, s2vArr, schoolArr, villageArr);
 				}
 			});
 		}
-	], function(err, result) {
+	], function(err, s2vArr, schoolArr, villageArr) {
 		if (err) {
 			console.log('there is some error for async');
 			return;
 		}
-		console.log(result);
-		var jsonStr = JSON.stringify(result);
-		if (item === '福田') {
-			console.log('---------');
-			jsonStr = fuTianFormat(jsonStr);
-		}
-		fsw(dst, result);
+		var s2vStr = JSON.stringify(s2vArr);
+		var schoolStr = JSON.stringify(schoolArr);
+		var villageStr = JSON.stringify(villageArr);
+
+		fsw(s2vJson, s2vStr);
+		fsw(schoolJson, schoolStr);
+		fsw(villageJson, villageStr);
 	});
 }
 
-
-function fuTianFormat(jsonStr) {
+// 格式化数组
+function formatArr(sheetName, arr) {
+	var jsonStr = JSON.stringify(arr);
 	// 替换'&#10;'为'，'
 	jsonStr = jsonStr.replace(/&#10;/g, '，');
-	// 去掉类似'10：'开头的数字
-	jsonStr = jsonStr.replace(/\d+：/g, '');
-	return jsonStr;
+	
+	if (sheetName === '福田') {
+		// 去掉类似'10：'开头的数字
+		jsonStr = jsonStr.replace(/\d+：/g, '');
+	}
+
+	var reArr = JSON.parse(jsonStr);
+	return reArr;
 }
-school2Village();
+
+getData();

@@ -12,7 +12,15 @@ var extName = '.json';
 var sheetName = 'futian';
 
 
-var sheetArr = ['福田', '南山', '罗湖'];
+// 读取project.json配置文件
+fsr('./project.json', function(err, data) {
+	if (err) console.log(err);
+	console.log(data);
+	
+	// 输出表格名数组
+	var sheetArr = data.outArr;
+	getData(sheetArr);
+});
 
 
 // // 遍历表格名字数组
@@ -35,8 +43,8 @@ function getXslxData(res, dst, sheetName, cb) {
 }
 
 
-function getData() {
-	_.map(sheetArr, school2Village);
+function getData(arr) {
+	_.map(arr, school2Village);
 }
 
 // 小区对应学校
@@ -62,8 +70,18 @@ function school2Village(item, id) {
 			_.map(arg1, function(some, idx) {
 				var key = some['招生学校'];
 				var range = some['招生范围'];
-				var rangeArr = range.split('，');
+
+				var rangeArr = [];
+				if (checkSelf(range)) {
+					rangeArr.push(range);
+				} else {
+					rangeArr = range.split(',');
+				}
 				// console.log("== rangeArr = " + JSON.stringify(rangeArr));
+
+				// 去除无效值
+				// rangeArr = delInvalidValue(rangeArr);
+
 				var obj = {};
 				obj[key] = rangeArr;
 				s2vArr.push(obj);
@@ -98,9 +116,12 @@ function school2Village(item, id) {
 // 格式化数组
 function formatArr(sheetName, arr) {
 	var jsonStr = JSON.stringify(arr);
+	// 全角逗号转换为半角
+	jsonStr = jsonStr.replace(/，/g, ',');
+
 	// 替换'&#10;'为'，'
-	jsonStr = jsonStr.replace(/&#10;/g, '，');
-	
+	jsonStr = jsonStr.replace(/&#10;/g, ',');
+
 	if (sheetName === '福田') {
 		// 去掉类似'10：'开头的数字
 		jsonStr = jsonStr.replace(/\d+：/g, '');
@@ -110,4 +131,30 @@ function formatArr(sheetName, arr) {
 	return reArr;
 }
 
-getData();
+// 检查是否是民办开头的
+function checkSelf(str) {
+	var regSelf = new RegExp('^私立', 'g');
+	var regSelf2 = new RegExp('^民办', 'g');
+	var isSelfSchool = regSelf.test(str);
+	var isSelfSchool2 = regSelf2.test(str);
+	var ret = isSelfSchool || isSelfSchool2;
+	return ret;
+}
+
+// 剔除无效值
+function delInvalidValue(arr) {
+	var len = arr.length;
+	_.map(arr, function(item, id) {
+		console.log('item = ' + item);
+		if (item === '无') {
+			arr = arr.splice(id, 1);
+		} else if (item === '') {
+			arr = arr.splice(id, 1);
+		}
+
+		if (id = len - 1) {
+			console.log(JSON.stringify(arr))
+			return arr;
+		} 
+	});
+}

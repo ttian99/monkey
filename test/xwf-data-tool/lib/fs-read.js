@@ -5,17 +5,18 @@ module.exports = function readFile(res, cb) {
 		var ret = null;
 		if (err) {
 			console.log(err);
-			cb(err, ret);
+			cb && cb(err, ret);
 			return;
 		}
 
 		try {
 			ret = JSON.parse(data);
-			cb(err, ret);
+			cb && cb(err, ret);
+			// return ret;
 		} catch (e) {
 			console.log('-- json parse error --');
 			console.log(e);
-			cb(e, ret);
+			cb && cb(e, ret);
 		}
 	});
 }

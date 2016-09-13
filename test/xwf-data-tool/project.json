@@ -1,0 +1,7 @@
+{
+	"oralRes" : "./res/test.xlsx",
+	"extName" : ".json",
+	"outDir": "./out/",
+	"outArr": ["福田", "南山", "罗湖"], 
+	"v2sDir": "./out/v2s/"
+}

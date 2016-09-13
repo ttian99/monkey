@@ -28,7 +28,7 @@ var search = function(sqlStr, cb) {
       if (err) {
         return console.error('error running query', err);
       } else {
-        console.log(result.rows.number);
+        console.log("-- result.rows.number = " + result.rows.number);
         // console.log(result.rows);
         //output: 1 
         var data = result.rows;

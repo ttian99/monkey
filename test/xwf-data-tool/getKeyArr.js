@@ -3,30 +3,34 @@ var fsw = require('./lib/fs-write.js');
 var fsr = require('./lib/fs-read.js');
 var xlsx = require('./lib/xlsxToJson.js');
 var _ = require('lodash');
-
 var async = require('async');
+var cfg = require('./lib/cfg.js');
 
 var resource = './res/test.xlsx';
 var dstDir = './out/';
 var extName = '.json';
-var sheetName = 'futian';
 
+// 判断文件路径是否存在
+function checkOutDir(dir) {
+	if (!fs.existsSync(dir)) {
+		fs.mkdirSync(dir);
+	}
+}
 
 // 读取project.json配置文件
 fsr('./project.json', function(err, data) {
 	if (err) console.log(err);
-	console.log(data);
-	
+	cfg = data;
+	// 初始化默认编码
+	var initAreaCode = require('./lib/area-code-def.js');
+	initAreaCode(cfg);
+	// 检测文件夹是否存在
+	checkOutDir(cfg.outDir);
 	// 输出表格名数组
-	var sheetArr = data.outArr;
-	getData(sheetArr);
+	var sheetArr = cfg.outArr;
+	// getData(sheetArr);
+	_.map(sheetArr, school2Village);
 });
-
-
-// // 遍历表格名字数组
-// function mapSheetArr(cb) {
-// 	_.map(sheetArr, cb);
-// }
 
 // 提取表格数据
 function getXslxData(res, dst, sheetName, cb) {
@@ -42,20 +46,16 @@ function getXslxData(res, dst, sheetName, cb) {
 	});
 }
 
-
-function getData(arr) {
-	_.map(arr, school2Village);
-}
-
 // 小区对应学校
 function school2Village(item, id) {
-	console.log('-- read sheet: ' + item);
-	var s2vJson = dstDir + item + '-学校对应小区' + extName;
-	var schoolJson = dstDir + item + '-学校' + extName;
-	var villageJson = dstDir + item + '-小区' + extName;
+	var sheetName = item;
+	console.log('-- read sheet: ' + sheetName);
+	var s2vJson = cfg.outDir + sheetName + '-学校对应小区' + cfg.extName;
+	var schoolJson = cfg.outDir + sheetName + '-学校' + cfg.extName;
+	var villageJson = cfg.outDir + sheetName + '-小区' + cfg.extName;
 	async.waterfall([
 		function(callback) {
-			getXslxData(resource, s2vJson, item, function(err, data) {
+			getXslxData(cfg.oralRes, s2vJson, sheetName, function(err, data) {
 				callback(null, data);
 			})
 		},
@@ -65,7 +65,7 @@ function school2Village(item, id) {
 			var villageArr = []; // 城市数组
 
 			// 格式化数组
-			arg1 = formatArr(item, arg1);
+			arg1 = formatArr(sheetName, arg1);
 
 			_.map(arg1, function(some, idx) {
 				var key = some['招生学校'];

@@ -40,7 +40,7 @@ fsr('./project.json', function(err, data) {
 function main(sheetName) {
   console.log('--------- main ---------');
   var words = "白芒村";
-  var fullObj = {};
+  // var fullObj = {};
   // var code = cfg
   // var sqlStr = "select houseaddress from room where houseaddress like '" + words + "%'";
   async.waterfall(
@@ -55,49 +55,59 @@ function main(sheetName) {
           });
         });
       },
+      // function(oralArr, callback) {
+      //   getKeyArr(words, oralArr, function(err, data) {
+      //     var jsonStr = JSON.stringify(data);
+      //     var dst = cfg.v2sDir + "402-00001-key" + cfg.extName;
+      //     // 记录关键字数组
+      //     outFile(jsonStr, dst, function() {
+      //       var keyArr = data;
+      //       callback(null, oralArr, keyArr);
+      //     });
+      //   });
+      // },
+
+      // function(oralArr, keyArr, callback) {
+      //   var keyObj = {};
+      //   var keyLen = keyArr.length;
+      //   console.log('-- keyLen = ' + keyLen);
+      //   _.map(keyArr, function(item, id) {
+      //     getBuildingArr(item, oralArr, function(err, data){
+      //       keyObj[item] = data;
+      //     });
+
+      //     if (id === keyLen - 1) {
+      //       var jsonStr = JSON.stringify(keyObj);
+      //       var dst = cfg.v2sDir + '402-00001-' + words + '-buildArr' + cfg.extName;
+      //       outFile(jsonStr, dst, function() {
+      //         callback(null, oralArr, keyObj);
+      //         console.log('------ over1 ------');
+      //       });
+      //     };
+      //   });
+      // },
       function(oralArr, callback) {
-        getKeyArr(words, oralArr, function(err, data) {
-          var jsonStr = JSON.stringify(data);
-          var dst = cfg.v2sDir + "402-00001-key" + cfg.extName;
-          // 记录关键字数组
-          outFile(jsonStr, dst, function() {
-            var keyArr = data;
-            callback(null, oralArr, keyArr);
-          });
-        });
-      },
-
-      function(oralArr, keyArr, callback) {
-        var keyObj = {};
-        var keyLen = keyArr.length;
-        console.log('-- keyLen = ' + keyLen);
-        _.map(keyArr, function(item, id) {
-          getBuildingArr(item, oralArr, function(err, data){
-            keyObj[item] = data;
-          });
-
-          if (id === keyLen - 1) {
-            var jsonStr = JSON.stringify(keyObj);
-            var dst = cfg.v2sDir + '402-00001-' + words + '-buildArr' + cfg.extName;
-            outFile(jsonStr, dst, function() {
-              callback(null, oralArr, keyObj);
-              console.log('------ over1 ------');
-            });
-          };
-        });
-      },
-      // function(oralArr, keyObj, callback) {
-
-      // }
+        console.log('---- getKBR -----');
+        // console.log('-- oralArr - ' + JSON.stringify(oralArr));
+        keyMode(words, oralArr, function(err, data) {
+          console.log('------- getKBR over -----------');
+          callback(err, data);
+        })
+      }
     ],
     function(err, result) {
-      console.log('------ over ------');
+      console.log('------ waterfall over ------');
+      var jsonStr = JSON.stringify(result);
+      var dst = cfg.v2sDir + "402-00001" + cfg.extName;
+      outFile(jsonStr, dst, function() {
+        console.log('----- out file : ' + dst + ' ----');
+      });
     });
 }
 
 // psql请求
 function psqlReq(words, cb) {
-  var sqlStr = "select * from room where houseaddress like '" + words + "%'";
+  var sqlStr = "select * from room where houseaddress like '%" + words + "%'";
   psql(sqlStr, cb);
   // psql(sqlStr, function(err, data) {
   //   var jsonStr = JSON.stringify(data);
@@ -190,6 +200,127 @@ function getBuildingArr(key, arr, cb) {
   });
 }
 
-// function getBuildingKey() {
+// 数字模式
+function numMode(words, arr, cb) {
+  var tmp = [];
+  var obj = {};
+  console.log('----- start --- map ------ arr ------');
+  _.map(arr, function(item, id) {
+    var str = item['houseaddress'];
+    // 去掉多余的空格
+    str = _.trim(str);
+    var strArr = str.split('');
+    // log.debug("strArr = ", JSON.stringify(strArr));
+    // 找到数字开始的位置
+    var startPos = _.findIndex(strArr, function(item) {
+      var aa = /^[0-9]*$/.exec(item);
+      return aa;
+    });
 
-// }
+    var endPos = _.findLastIndex(strArr, function(item) {
+      var bb = /[\u4E00-\u9FA5\uF900-\uFA2D]$/.exec(item);
+      return bb;
+    });
+
+    var bArr = []; // 房间数组
+    var len = strArr.length;
+    // 截取关键字
+    var key = str.slice(0, startPos);
+    // 截取栋数
+    var building = str.slice(startPos, endPos + 1);
+    // 截取房间
+    var room = str.slice(endPos + 1, len);
+    console.log('key = ' + key);
+    console.log('building = ' + building);
+    console.log('room = ' + room);
+
+    // 数组去重
+    if (obj[key] && obj[key][building]) {
+      obj[key][building].push(room);
+    } else {
+      obj[key] = {};
+      obj[key][building] = [];
+      obj[key][building].push(room);
+    }
+
+    if (id === arr.length - 1) {
+      // 数组去重
+      // tmp = _.uniq(tmp);
+      console.log('----- map over ------');
+      cb(null, obj);
+    }
+  });
+}
+
+// 关键字模式
+function keyMode(words, arr, cb) {
+  var obj = {};
+  console.log('----- start --- map ------ arr ------');
+
+  var arrLen = arr.length;
+  _.map(arr, function(item, id) {
+    var str = item['houseaddress'];
+    // 去掉多余的空格
+    str = _.trim(str);
+    // var strArr = str.split('');
+
+    var tmpStr = str;
+    // 匹配关键字words，并替换为","
+    var reg = new RegExp(words, 'g');
+    tmpStr = tmpStr.replace(reg, ",");
+    // 利用","分割字符串为数组, 提取数组最后一部分right（包含栋数+房号）
+    var tmpArr = tmpStr.split(",");
+    var len = tmpArr.length - 1;
+    var right = tmpArr[len];
+    // 窃取关键字
+    var key = _.trimEnd(str, right);
+
+    // 找到末尾数字的起始位置
+    // console.log("right = " + right);
+    var strArr = right.split('');
+    var endPos = _.findLastIndex(strArr, function(item) {
+      // var bb = /[^A-Za-z0-9]$/.exec(item);
+      var bb = /[\u4E00-\u9FA5\uF900-\uFA2D]$/.exec(item);
+      return bb;
+    });
+
+    var bArr = []; // 房间数组
+    var len = strArr.length;
+    // 截取栋数
+    var building = right.slice(0, endPos + 1);
+    // 截取房间
+    var room = right.slice(endPos + 1, len);
+    // console.log('key = ' + key);
+    console.log('building = ' + building);
+    // console.log('room = ' + room);
+
+    // 判断关键字是否存在
+    var isHaveKey = _.has(obj, key);
+    if (!isHaveKey) {
+      obj[key] = {};
+    }
+
+    // 判断楼栋数是否存在
+    var isHaveBuilding = _.has(obj[key], building);
+    if (!isHaveBuilding) {
+      obj[key][building] = [];
+    }
+
+    obj[key][building].push(room);
+
+    // 数组去重
+    // if (obj[key][building]) {
+    //   obj[key][building].push(room);
+    // } else {
+    //   obj[key] = {};
+    //   obj[key][building] = [];
+    //   obj[key][building].push(room);
+    // }
+
+    if (id === arrLen - 1) {
+      // 数组去重
+      console.log('----- map over ------');
+      cb(null, obj);
+    }
+  });
+}

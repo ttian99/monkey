@@ -6,7 +6,7 @@ var arr = [
 	'上步中路1045号深勘大院2栋深勘大院2栋101',
 	'深勘大院公共厕所102号',
 	'深勘大院保安岗亭公共厕所',
-	'深勘大院2栋909号'
+	'深勘大院2号909号'
 ];
 
 var def = {
@@ -63,7 +63,8 @@ function getIndex(str, words) {
 	console.log("right = " + right);
 	var strArr = right.split('');
 	var endPos = _.findLastIndex(strArr, function(item) {
-		var bb = /[^A-Za-z0-9]$/.exec(item);
+		// var bb = /[^A-Za-z0-9]$/.exec(item);
+		var bb = /[\u4E00-\u9FA5\uF900-\uFA2D]$/.exec(item);
 		return bb;
 	});
 
@@ -87,7 +88,7 @@ function getIndex(str, words) {
 		eObj[key][building] = [];
 		eObj[key][building].push(room);
 	}
-	console.log(eObj);
+	
 }
 
 
@@ -109,4 +110,7 @@ _.map(arr, function(item, id) {
 	// // var reg = new Regexp(words, 'g');
 	// // var reg = '/'+ words + '/g';
 	// // reg.exec();
+	if (id === arr.length - 1) {
+		console.log(eObj);
+	};
 });

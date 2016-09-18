@@ -1,5 +1,6 @@
 var fs = require('fs');
 var fsr = require('./lib/fs-read.js');
+var fsw = require('./lib/fs-write.js');
 var psql = require('./psql.js');
 var _ = require('lodash');
 var cfg = null;
@@ -19,6 +20,7 @@ function checkOutDir(dir) {
 // 读取project.json配置文件
 fsr('./project.json', function(err, data) {
   if (err){
+  	console.log('-- read project fail --');
     console.log(err);
     return;
   } 
@@ -87,12 +89,19 @@ function reqData(words, idx) {
     [
       function(callback) {
         psqlReq(words, function(err, data) {
-          // 记录原始数据
-          var jsonStr = JSON.stringify(data);
-          var dst = cfg.v2sDir + idx + "-oral" + cfg.extName;
-          outFile(jsonStr, dst, function() {
-            callback(null, data);
-          });
+          console.log('-- get the res --');
+          if (data.length < 1) {
+          	callback('NULLDB')
+          } else {
+			// 记录原始数据
+			var jsonStr = JSON.stringify(data);
+			callback(null, data);
+          }
+          
+          // var dst = cfg.v2sDir + idx + "-oral" + cfg.extName;
+          // outFile(jsonStr, dst, function() {
+          //   callback(null, data);
+          // });
         });
       },
       function(oralArr, callback) {
@@ -103,17 +112,23 @@ function reqData(words, idx) {
     ],
     function(err, result) {
       // console.log('------ waterfall over ------');
-      var jsonStr = JSON.stringify(result);
-      var dst = cfg.v2sDir + idx + cfg.extName;
-      outFile(jsonStr, dst, function() {
-        console.log('----- out file : ' + dst + ' ----');
-      });
+      if (err === 'NULLDB') {
+      	console.log('---- the db is not find the words : ' + words);
+      	saveIdx(idx);
+      }  else {
+		var jsonStr = JSON.stringify(result);
+		var dst = cfg.v2sDir + idx + cfg.extName;
+		outFile(jsonStr, dst, function() {
+			console.log('----- out file : ' + dst + ' ----');
+			saveIdx(idx);
+		});
+      }
     });
 }
 
 // psql请求
 function psqlReq(words, cb) {
-  var sqlStr = "select * from room where code='" + words + "'";
+  var sqlStr = "select * from room where houseaddress like '%" + words + "%'";
   psql(sqlStr, cb);
   // psql(sqlStr, function(err, data) {
   //   var jsonStr = JSON.stringify(data);
@@ -259,7 +274,7 @@ function keyMode(words, arr, cb) {
     // 截取房间
     var room = right.slice(endPos + 1, len);
     // console.log('key = ' + key);
-    console.log('building = ' + building);
+    // console.log('building = ' + building);
     // console.log('room = ' + room);
 
     // 判断关键字是否存在
@@ -288,7 +303,7 @@ function keyMode(words, arr, cb) {
     //   obj[key][building] = [];
     //   obj[key][building].push(room);
     // }
-
+    // console.log('== arrLen = ' + arrLen);
     if (id === arrLen - 1) {
       // 数组去重
       console.log('----- map over ------');
@@ -304,9 +319,11 @@ function saveIdx(idx) {
   // 读取project.json配置文件
   fsw('./project.json', jsonStr, function(err, data) {
     if (err){
+    	console.log('-- saveIdx error --')
       console.log(err);
-    } 
+    }
 
+    idx = addIdx(idx);
     console.log('-- saveIdx over => idx : ' + idx + '--');
     startApp(idx);
   });

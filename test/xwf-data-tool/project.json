@@ -3,5 +3,6 @@
 	"extName" : ".json",
 	"outDir": "./out/",
 	"outArr": ["福田", "南山", "罗湖", "龙华"], 
-	"v2sDir": "./out/v2s/"
+	"v2sDir": "./out/v2s/",
+	"idx": "402-00000"
 }
